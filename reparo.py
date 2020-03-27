@@ -33,6 +33,7 @@ owner = "Bitergia"
 
 REPO = input("repo name: ")
 dirname = input("path to repo: ")
+LINK = "https://api.github.com/repos/chaoss/"
 
 
 def getlistoffiles(dirname):
@@ -67,10 +68,9 @@ def main():
         api_func(item, dirname)
 
 
-def api_func(items2, dirname):
-    PATH_TO_FILE2 = items2.replace(dirname, '')
+def api_func(file_name, dirname):
+    PATH_TO_FILE2 = file_name.replace(dirname, '')
     PATH_TO_FILE = PATH_TO_FILE2.strip('/')
-    LINK = "https://api.github.com/repos/chaoss/"
 
     data = requests.get(LINK + REPO + "/commits?path=" + PATH_TO_FILE)
 
@@ -89,7 +89,7 @@ def api_func(items2, dirname):
     authors = [key + " <" + value + ">" for key, value in authors_data.items()]
     authors.append('')
 
-    # print(authors)
+    print(authors)
 
     template_file = open("gpl-v3.tmpl")
 
@@ -103,21 +103,21 @@ def api_func(items2, dirname):
 
     result = src.substitute(sub_dict)
 
-    with open(items2, 'r') as f:
+    with open(file_name, 'r') as f:
         contents = f.readlines()
         i = 0
         for item in contents:
             if item.startswith('#'):
                 i += 1
 
-    with open(items2, 'w') as f:
+    with open(file_name, 'w') as f:
         f.writelines(contents[i:])
 
-    with open(items2, 'r') as f:
+    with open(file_name, 'r') as f:
         contents = f.readlines()
         contents.insert(0, result+"\n")
 
-    with open(items2, 'w') as f:
+    with open(file_name, 'w') as f:
         contents = "".join(contents)
         f.write(contents)
 
