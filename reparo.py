@@ -18,15 +18,22 @@
 #
 # Authors:
 #     Venu Vardhan Reddy Tekula <venuvardhanreddytekula8@gmail.com>
+#     Sanjana Nayar <sanjananayar2k1@gmail.com>
 #
+
 
 import requests
 import json
+import sys
 import os
 from string import Template
 
 years = "2015-2020"
 owner = "Bitergia"
+
+REPO = input("repo name: ")
+dirname = input("path to repo: ")
+LINK = "https://api.github.com/repos/chaoss/"
 
 
 def getlistoffiles(dirname):
@@ -41,32 +48,31 @@ def getlistoffiles(dirname):
     return(allfiles)
 
 
-REPO = input("repo name: ")
-dirname = input("path to repo: ")
+def main():
 
-listoffiles = getlistoffiles(dirname)
+    listoffiles = getlistoffiles(dirname)
 
-FILES = []
+    FILES = []
 
-for f in listoffiles:
-    count = 0
-    try:
-        for line in open(f):
-            if "Copyright (C)" and "Authors" in line:
-                count = count+1
-        if(count > 0):
-            FILES.append(f)
-    except UnicodeDecodeError:
-        pass
+    for f in listoffiles:
+        count = 0
+        try:
+            for line in open(f):
+                if "Copyright (C)" and "Authors" in line:
+                    count = count+1
+            if(count > 0):
+                FILES.append(f)
+        except UnicodeDecodeError:
+            pass
+    for item in FILES:
+        api_func(item, dirname)
 
 
-for items2 in FILES:
-
-    PATH_TO_FILE2 = items2.replace(dirname, '')
+def api_func(file_name, dirname):
+    PATH_TO_FILE2 = file_name.replace(dirname, '')
     PATH_TO_FILE = PATH_TO_FILE2.strip('/')
-    CHAOSS_HTTP = "https://api.github.com/repos/chaoss/"
 
-    data = requests.get(CHAOSS_HTTP + REPO + "/commits?path=" + PATH_TO_FILE)
+    data = requests.get(LINK + REPO + "/commits?path=" + PATH_TO_FILE)
 
     data = json.loads(data.content)
 
@@ -83,7 +89,7 @@ for items2 in FILES:
     authors = [key + " <" + value + ">" for key, value in authors_data.items()]
     authors.append('')
 
-    # print(authors)
+    print(authors)
 
     template_file = open("gpl-v3.tmpl")
 
@@ -97,20 +103,24 @@ for items2 in FILES:
 
     result = src.substitute(sub_dict)
 
-    with open(items2, 'r') as f:
+    with open(file_name, 'r') as f:
         contents = f.readlines()
         i = 0
         for item in contents:
             if item.startswith('#'):
                 i += 1
 
-    with open(items2, 'w') as f:
+    with open(file_name, 'w') as f:
         f.writelines(contents[i:])
 
-    with open(items2, 'r') as f:
+    with open(file_name, 'r') as f:
         contents = f.readlines()
         contents.insert(0, result+"\n")
 
-    with open(items2, 'w') as f:
+    with open(file_name, 'w') as f:
         contents = "".join(contents)
         f.write(contents)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
